@@ -1,4 +1,6 @@
 ﻿@model ClbTinhoc.Web.Models.KhoaHoc
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
 
 @{
     ViewData["Title"] = "Chi tiết khóa học";
@@ -26,38 +28,43 @@
                 <dt class="col-sm-3">Ngày kết thúc</dt>
                 <dd class="col-sm-9">@Model.NgayKetThuc.ToString("dd/MM/yyyy")</dd>
             </dl>
+            <!-- Nút đăng ký khóa học -->
+            <div class="mt-3">
+                <button id="registerCourseBtn" class="btn btn-primary">Đăng ký khóa học</button>
+            </div>
+            <div id="registerCourseForm" class="mt-3" style="display:none;">
+                <form asp-action="RegisterCourse" asp-controller="KhoaHoc" method="post">
+                    <input type="hidden" name="MaKhoaHoc" value="@Model.MaKhoaHoc" />
+                    <div class="form-group">
+                        <label for="MaSinhVien">Chọn sinh viên</label>
+                        <div class="input-group">
+                            <select name="MaSinhVien" id="MaSinhVien" class="form-control select2" required>
+                                <option value="">-- Chọn sinh viên --</option>
+                                @if (ViewBag.AvailableStudents != null && ViewBag.AvailableStudents.Count > 0)
+                                {
+                                    @foreach (var student in ViewBag.AvailableStudents)
+                                    {
+                                        <option value="@student.MaSinhVien">@student.HoTen (@student.MaSinhVien)</option>
+                                    }
+                                }
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary" onclick="$('#MaSinhVien').select2('open');">
+                                <i class="bi bi-caret-down-fill"></i>
+                            </button>
+                        </div>
+                        @if (ViewBag.AvailableStudents == null || ViewBag.AvailableStudents.Count == 0)
+                        {
+                            <small class="text-danger">Không có sinh viên nào khả dụng</small>
+                        }
+                    </div>
+                    <div class="form-group mt-3">
+                        <button type="submit" class="btn btn-success">Xác nhận đăng ký</button>
+                        <button type="button" id="cancelRegisterCourse" class="btn btn-secondary">Hủy</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-
-    <h3 class="mt-4">Danh sách lớp học</h3>
-    @if (Model.LopHoc != null && Model.LopHoc.Any())
-    {
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Mã lớp</th>
-                    <th>Tên lớp</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var lop in Model.LopHoc)
-                {
-                    <tr>
-                        <td>@lop.MaLopHoc</td>
-                        <td>@lop.TenLopHoc</td>
-                        <td>
-                            <a asp-controller="LopHoc" asp-action="Details" asp-route-id="@lop.MaLopHoc" class="btn btn-sm btn-info">Chi tiết</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>Chưa có lớp học nào cho khóa học này.</p>
-    }
 
     <h3 class="mt-4">Danh sách sinh viên tham gia</h3>
     @if (Model.KhoaHoc_SinhVien != null && Model.KhoaHoc_SinhVien.Any())
@@ -77,9 +84,9 @@
                 {
                     <tr>
                         <td>@ks.MaSinhVien</td>
-                        <td>@ks.SinhVien.HoTen</td>
-                        <td>@ks.SinhVien.LopSinhHoat</td>
-                        <td>@ks.SinhVien.Email</td>
+                        <td>@(ks.SinhVien?.HoTen ?? "Không tìm thấy")</td>
+                        <td>@(ks.SinhVien?.LopSinhHoat ?? "Không tìm thấy")</td>
+                        <td>@(ks.SinhVien?.Email ?? "Không tìm thấy")</td>
                         <td>
                             <a asp-controller="SinhVien" asp-action="Details" asp-route-id="@ks.MaSinhVien" class="btn btn-sm btn-info">Chi tiết</a>
                         </td>
@@ -92,9 +99,91 @@
     {
         <p>Chưa có sinh viên nào tham gia khóa học này.</p>
     }
+
+    <!-- Danh sách yêu cầu đăng ký chờ xác nhận (chỉ hiển thị cho Admin) -->
+    @* @if ((await AuthorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded) *@
+    @* { *@
+    @*     //<h3 class="mt-4">Yêu cầu đăng ký chờ xác nhận</h3> *@
+    @*     //@{ *@
+    @*     //    var pendingRegistrations = await Context.PendingRegistrations *@
+    @*     //        .Include(pr => pr.SinhVien) *@
+    @*     //        .Where(pr => pr.MaKhoaHoc == Model.MaKhoaHoc && pr.TrangThai == "Pending") *@
+    @*     //        .ToListAsync(); *@
+    @*     //} *@
+    @*     @if (pendingRegistrations.Any()) *@
+    @*     { *@
+    @*         <table class="table table-striped"> *@
+    @*             <thead> *@
+    @*                 <tr> *@
+    @*                     <th>Mã sinh viên</th> *@
+    @*                     <th>Họ tên</th> *@
+    @*                     <th>Email</th> *@
+    @*                     <th>Thao tác</th> *@
+    @*                 </tr> *@
+    @*             </thead> *@
+    @*             <tbody> *@
+    @*                 @foreach (var pr in pendingRegistrations) *@
+    @*                 { *@
+    @*                     <tr> *@
+    @*                         <td>@pr.MaSinhVien</td> *@
+    @*                         <td>@(pr.SinhVien?.HoTen ?? "Không tìm thấy")</td> *@
+    @*                         <td>@(pr.SinhVien?.Email ?? "Không tìm thấy")</td> *@
+    @*                         <td> *@
+    @*                             <form asp-action="ConfirmRegistration" asp-controller="KhoaHoc" method="post" class="d-inline"> *@
+    @*                                 <input type="hidden" name="id" value="@pr.Id" /> *@
+    @*                                 <input type="hidden" name="approve" value="true" /> *@
+    @*                                 <button type="submit" class="btn btn-sm btn-success">Xác nhận</button> *@
+    @*                             </form> *@
+    @*                             <form asp-action="ConfirmRegistration" asp-controller="KhoaHoc" method="post" class="d-inline"> *@
+    @*                                 <input type="hidden" name="id" value="@pr.Id" /> *@
+    @*                                 <input type="hidden" name="approve" value="false" /> *@
+    @*                                 <button type="submit" class="btn btn-sm btn-danger">Từ chối</button> *@
+    @*                             </form> *@
+    @*                         </td> *@
+    @*                     </tr> *@
+    @*                 } *@
+    @*             </tbody> *@
+    @*         </table> *@
+    @*     } *@
+    @*     else *@
+    @*     { *@
+    @*         <p>Chưa có yêu cầu đăng ký nào đang chờ xác nhận.</p> *@
+    @*     } *@
+    @* } *@
 </div>
 
 <div class="mt-3">
-    <a asp-action="Edit" asp-route-id="@Model.MaKhoaHoc" class="btn btn-warning">Sửa</a> |
     <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
 </div>
+
+@section Scripts {
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <script>
+        $(document).ready(function () {
+            // Khởi tạo Select2
+            $('#MaSinhVien').select2({
+                placeholder: "-- Chọn sinh viên --",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#registerCourseForm') // Giữ dropdown trong form
+            });
+
+            // Hiển thị/ẩn form đăng ký
+            $('#registerCourseBtn').click(function () {
+                $('#registerCourseForm').show();
+            });
+
+            $('#cancelRegisterCourse').click(function () {
+                $('#registerCourseForm').hide();
+                $('#MaSinhVien').val('').trigger('change'); // Reset Select2
+            });
+        });
+    </script>
+}

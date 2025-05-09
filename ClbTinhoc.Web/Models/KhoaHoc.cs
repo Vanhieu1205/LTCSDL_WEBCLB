@@ -10,7 +10,6 @@ namespace ClbTinhoc.Web.Models
     {
         public KhoaHoc()
         {
-            LopHoc = new HashSet<LopHoc>();
             DiemThi = new HashSet<DiemThi>();
         }
 
@@ -42,8 +41,6 @@ namespace ClbTinhoc.Web.Models
         public string image { get; set; }
 
         // Navigation properties
-        [NotMapped]
-        public virtual ICollection<LopHoc> LopHoc { get; set; }
 
         [NotMapped]
         public virtual ICollection<DiemThi> DiemThi { get; set; }

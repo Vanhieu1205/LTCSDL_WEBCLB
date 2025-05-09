@@ -150,25 +150,101 @@ namespace ClbTinhoc.Web.Controllers
 
         // Các action khác giữ nguyên
         // GET: KhoaHoc/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: KhoaHoc/Details/5
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var khoaHoc = await _context.KhoaHoc
-                .Include(k => k.LopHoc)
-                .Include(k => k.KhoaHoc_SinhVien) // Bao gồm mối quan hệ với KhoaHoc_SinhVien
-                    .ThenInclude(ks => ks.SinhVien) // Bao gồm thông tin SinhVien
+                .Include(k => k.KhoaHoc_SinhVien)
+                .ThenInclude(ks => ks.SinhVien)
                 .FirstOrDefaultAsync(m => m.MaKhoaHoc == id);
 
             if (khoaHoc == null)
             {
+                _logger.LogWarning($"KhoaHoc with ID {id} not found.");
                 return NotFound();
             }
 
+            // Lấy danh sách sinh viên chưa tham gia khóa học
+            var enrolledStudentIds = khoaHoc.KhoaHoc_SinhVien
+                .Select(ks => ks.MaSinhVien)
+                .ToList();
+            var availableStudents = await _context.SinhVien
+                .Where(s => !enrolledStudentIds.Contains(s.MaSinhVien))
+                .OrderBy(s => s.HoTen)
+                .Select(s => new { s.MaSinhVien, s.HoTen })
+                .ToListAsync();
+
+            _logger.LogInformation($"Found {availableStudents.Count} available students for KhoaHoc ID {id}.");
+            ViewBag.AvailableStudents = availableStudents;
+
             return View(khoaHoc);
+        }
+
+        // POST: KhoaHoc/RegisterCourse
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterCourse(int MaKhoaHoc, string MaSinhVien)
+        {
+            try
+            {
+                _logger.LogInformation($"RegisterCourse called with MaKhoaHoc: {MaKhoaHoc}, MaSinhVien: {MaSinhVien}");
+
+                if (string.IsNullOrEmpty(MaSinhVien))
+                {
+                    _logger.LogWarning("MaSinhVien is empty.");
+                    TempData["Error"] = "Vui lòng chọn sinh viên.";
+                    return RedirectToAction("Details", new { id = MaKhoaHoc });
+                }
+
+                // Kiểm tra khóa học
+                var khoaHoc = await _context.KhoaHoc.FindAsync(MaKhoaHoc);
+                if (khoaHoc == null)
+                {
+                    _logger.LogWarning($"KhoaHoc with ID {MaKhoaHoc} not found.");
+                    TempData["Error"] = "Khóa học không tồn tại.";
+                    return RedirectToAction("Details", new { id = MaKhoaHoc });
+                }
+
+                // Kiểm tra sinh viên
+                var sinhVien = await _context.SinhVien.FindAsync(MaSinhVien);
+                if (sinhVien == null)
+                {
+                    _logger.LogWarning($"SinhVien with MaSinhVien {MaSinhVien} not found.");
+                    TempData["Error"] = "Sinh viên không tồn tại.";
+                    return RedirectToAction("Details", new { id = MaKhoaHoc });
+                }
+
+                // Kiểm tra đã tham gia
+                var existing = await _context.KhoaHoc_SinhVien
+                    .AnyAsync(ks => ks.MaKhoaHoc == MaKhoaHoc && ks.MaSinhVien == MaSinhVien);
+
+                if (existing)
+                {
+                    _logger.LogWarning($"SinhVien {MaSinhVien} already enrolled in KhoaHoc {MaKhoaHoc}.");
+                    TempData["Error"] = "Sinh viên đã tham gia khóa học này.";
+                    return RedirectToAction("Details", new { id = MaKhoaHoc });
+                }
+
+                var khoaHocSinhVien = new KhoaHoc_SinhVien
+                {
+                    MaKhoaHoc = MaKhoaHoc,
+                    MaSinhVien = MaSinhVien
+                };
+
+                _logger.LogInformation($"Adding KhoaHoc_SinhVien: MaKhoaHoc={MaKhoaHoc}, MaSinhVien={MaSinhVien}");
+                _context.KhoaHoc_SinhVien.Add(khoaHocSinhVien);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("KhoaHoc_SinhVien saved successfully.");
+                TempData["Success"] = "Đăng ký khóa học thành công.";
+                return RedirectToAction("Details", new { id = MaKhoaHoc });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error registering course: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                TempData["Error"] = "Có lỗi xảy ra khi đăng ký khóa học. Vui lòng thử lại.";
+                return RedirectToAction("Details", new { id = MaKhoaHoc });
+            }
         }
 
         // GET: KhoaHoc/Edit/5

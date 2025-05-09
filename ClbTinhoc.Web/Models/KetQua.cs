@@ -10,7 +10,7 @@ namespace ClbTinhoc.Web.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaKetQua { get; set; }
         public string MaSinhVien { get; set; }
-        public int MaLopHoc { get; set; }
+        public int MaKhoaHoc { get; set; }
         public float DiemCuoiKy { get; set; }
         public DateTime NgayCapNhat { get; set; }
 
@@ -18,7 +18,7 @@ namespace ClbTinhoc.Web.Models
         [ForeignKey("MaSinhVien")]
         public virtual SinhVien SinhVien { get; set; }
 
-        [ForeignKey("MaLopHoc")]
-        public virtual LopHoc LopHoc { get; set; }
+        [ForeignKey("MaKhoaHoc")]
+        public virtual KhoaHoc KhoaHoc { get; set; }
     }
 }

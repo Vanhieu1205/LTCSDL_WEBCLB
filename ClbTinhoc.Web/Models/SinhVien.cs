@@ -11,7 +11,7 @@ namespace ClbTinhoc.Web.Models
         public SinhVien()
         {
             // Khởi tạo các collection để tránh lỗi null
-            StudentLopHocs = new HashSet<StudentLopHoc>();
+            KhoaHoc_SinhViens = new HashSet<KhoaHoc_SinhVien>();
             KetQuas = new HashSet<KetQua>();
             DiemThis = new HashSet<DiemThi>();
         }
@@ -55,7 +55,7 @@ namespace ClbTinhoc.Web.Models
 
         // Navigation properties - không bắt buộc
         [NotMapped] // Thêm thuộc tính này để không ánh xạ vào database
-        public virtual ICollection<StudentLopHoc> StudentLopHocs { get; set; }
+        public virtual ICollection<KhoaHoc_SinhVien> KhoaHoc_SinhViens { get; set; }
 
         [NotMapped]
         public virtual ICollection<KetQua> KetQuas { get; set; }

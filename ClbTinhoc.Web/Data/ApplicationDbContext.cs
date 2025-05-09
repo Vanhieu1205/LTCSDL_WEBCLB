@@ -13,10 +13,9 @@ namespace ClbTinhoc.Web.Data
         public DbSet<SinhVien> SinhVien { get; set; }
         public DbSet<Support> Support { get; set; }
         public DbSet<KhoaHoc> KhoaHoc { get; set; }
-        public DbSet<LopHoc> LopHoc { get; set; }
         public DbSet<KetQua> KetQua { get; set; }
-        public DbSet<StudentLopHoc> StudentLopHoc { get; set; }
-        public DbSet<SupportLopHoc> SupportLopHoc { get; set; }
+        public DbSet<KhoaHoc_SinhVien> KhoaHoc_SinhViens { get; set; }
+        public DbSet<SupportKhoaHoc> SupportKhoaHoc { get; set; }
         public DbSet<DiemThi> DiemThi { get; set; }
         public DbSet<UserLogin> UserLogin { get; set; }
 
@@ -44,29 +43,27 @@ namespace ClbTinhoc.Web.Data
             modelBuilder.Entity<SinhVien>().HasKey(s => s.MaSinhVien);
             modelBuilder.Entity<Support>().HasKey(s => s.MaSupport);
             modelBuilder.Entity<KhoaHoc>()
-                        .HasMany(k => k.LopHoc)
-                        .WithOne(l => l.KhoaHoc)
+                        .HasOne<KhoaHoc>()
+                        .WithMany()
                         .HasForeignKey(l => l.MaKhoaHoc);
-            modelBuilder.Entity<LopHoc>().HasKey(l => l.MaLopHoc);
             modelBuilder.Entity<KetQua>().HasKey(k => k.MaKetQua);
             modelBuilder.Entity<DiemThi>().HasKey(d => d.MaDiem);
             modelBuilder.Entity<UserLogin>().HasKey(u => u.Id);
 
             // Cấu hình khóa chính cho các bảng liên kết
-            modelBuilder.Entity<StudentLopHoc>()
+            modelBuilder.Entity<KhoaHoc_SinhVien>()
                 .HasKey(sl => new { sl.MaSinhVien, sl.MaKhoaHoc });
 
-            modelBuilder.Entity<SupportLopHoc>()
-                .HasKey(sl => new { sl.MaSupport, sl.MaLopHoc });
+            modelBuilder.Entity<SupportKhoaHoc>()
+                .HasKey(sl => new { sl.MaSupport, sl.MaKhoaHoc });
 
             // Cấu hình tên bảng
             modelBuilder.Entity<SinhVien>().ToTable("sinhvien");
             modelBuilder.Entity<Support>().ToTable("support");
             modelBuilder.Entity<KhoaHoc>().ToTable("khoahoc");
-            modelBuilder.Entity<LopHoc>().ToTable("lophoc");
             modelBuilder.Entity<KetQua>().ToTable("ketqua");
-            modelBuilder.Entity<StudentLopHoc>().ToTable("student_lophoc");
-            modelBuilder.Entity<SupportLopHoc>().ToTable("support_lophoc");
+            modelBuilder.Entity<KhoaHoc_SinhVien>().ToTable("student_khoahoc");
+            modelBuilder.Entity<SupportKhoaHoc>().ToTable("support_khoahoc");
             modelBuilder.Entity<DiemThi>().ToTable("diemthi");
             modelBuilder.Entity<UserLogin>().ToTable("user_login");
 

@@ -23,7 +23,7 @@ namespace ClbTinhoc.Web.Controllers
         {
             var ketQuas = await _context.KetQua
                 .Include(k => k.SinhVien)
-                .Include(k => k.LopHoc)
+                .Include(k => k.KhoaHoc)
                 .ToListAsync();
             return View(ketQuas);
         }
@@ -38,7 +38,7 @@ namespace ClbTinhoc.Web.Controllers
 
             var ketQua = await _context.KetQua
                 .Include(k => k.SinhVien)
-                .Include(k => k.LopHoc)
+                .Include(k => k.KhoaHoc)
                 .FirstOrDefaultAsync(m => m.MaKetQua == id);
 
             if (ketQua == null)
@@ -53,7 +53,7 @@ namespace ClbTinhoc.Web.Controllers
         public IActionResult Create()
         {
             ViewData["MaSinhVien"] = new SelectList(_context.SinhVien, "MaSinhVien", "HoTen");
-            ViewData["MaLopHoc"] = new SelectList(_context.LopHoc, "MaLopHoc", "TenLopHoc");
+            ViewData["MaLopHoc"] = new SelectList(_context.KhoaHoc, "MaLopHoc", "TenLopHoc");
             return View();
         }
 
@@ -70,7 +70,7 @@ namespace ClbTinhoc.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["MaSinhVien"] = new SelectList(_context.SinhVien, "MaSinhVien", "HoTen", ketQua.MaSinhVien);
-            ViewData["MaLopHoc"] = new SelectList(_context.LopHoc, "MaLopHoc", "TenLopHoc", ketQua.MaLopHoc);
+            ViewData["MaLopHoc"] = new SelectList(_context.KhoaHoc, "MaLopHoc", "TenLopHoc", ketQua.MaKhoaHoc);
             return View(ketQua);
         }
 
@@ -88,7 +88,7 @@ namespace ClbTinhoc.Web.Controllers
                 return NotFound();
             }
             ViewData["MaSinhVien"] = new SelectList(_context.SinhVien, "MaSinhVien", "HoTen", ketQua.MaSinhVien);
-            ViewData["MaLopHoc"] = new SelectList(_context.LopHoc, "MaLopHoc", "TenLopHoc", ketQua.MaLopHoc);
+            ViewData["MaLopHoc"] = new SelectList(_context.KhoaHoc, "MaLopHoc", "TenLopHoc", ketQua.MaKhoaHoc);
             return View(ketQua);
         }
 
@@ -124,7 +124,7 @@ namespace ClbTinhoc.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["MaSinhVien"] = new SelectList(_context.SinhVien, "MaSinhVien", "HoTen", ketQua.MaSinhVien);
-            ViewData["MaLopHoc"] = new SelectList(_context.LopHoc, "MaLopHoc", "TenLopHoc", ketQua.MaLopHoc);
+            ViewData["MaLopHoc"] = new SelectList(_context.KhoaHoc, "MaLopHoc", "TenLopHoc", ketQua.MaKhoaHoc);
             return View(ketQua);
         }
 
@@ -138,7 +138,7 @@ namespace ClbTinhoc.Web.Controllers
 
             var ketQua = await _context.KetQua
                 .Include(k => k.SinhVien)
-                .Include(k => k.LopHoc)
+                .Include(k => k.KhoaHoc)
                 .FirstOrDefaultAsync(m => m.MaKetQua == id);
             if (ketQua == null)
             {
